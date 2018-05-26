@@ -34,6 +34,7 @@
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx.h"
 #include "stm32f0xx_it.h"
+#include "nOS.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -55,7 +56,7 @@ extern UART_HandleTypeDef huart1;
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+  nOS_Tick(1);
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();

@@ -57,6 +57,7 @@
 #include "usart.h"
 #include "usb_device.h"
 #include "gpio.h"
+#include "nOS.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -89,7 +90,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  nOS_Init();
+  nOS_Start();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/

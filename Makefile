@@ -36,7 +36,8 @@ Application/User \
 Drivers/STM32F0xx_HAL_Driver \
 Application \
 Middlewares/USB_Device_Library \
-Drivers
+Drivers \
+nOS
 
 # firmware library path
 PERIFLIB_PATH = 
@@ -95,7 +96,22 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
 Middlewares/Third_Party/FatFs/src/ff_gen_drv.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c \
-Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c  
+Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c  \
+nOS/src/port/GCC/ARM_Cortex_M0/nOSPort.c \
+nOS/src/nOSAlarm.c \
+nOS/src/nOSEvent.c \
+nOS/src/nOSList.c \
+nOS/src/nOSMutex.c \
+nOS/src/nOSSched.c \
+nOS/src/nOSSignal.c \
+nOS/src/nOSTime.c \
+nOS/src/nOSBarrier.c \
+nOS/src/nOSFlag.c \
+nOS/src/nOSMem.c \
+nOS/src/nOSQueue.c \
+nOS/src/nOSSem.c \
+nOS/src/nOSThread.c \
+nOS/src/nOSTimer.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -158,8 +174,8 @@ C_INCLUDES =  \
 -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F0xx/Include \
 -IMiddlewares/Third_Party/FatFs/src \
--IDrivers/CMSIS/Include
-
+-IDrivers/CMSIS/Include \
+-InOS/inc
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
