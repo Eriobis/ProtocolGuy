@@ -21,7 +21,7 @@ TARGET = ProtocolGuy
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -O0
 
 
 #######################################
@@ -111,7 +111,8 @@ nOS/src/nOSMem.c \
 nOS/src/nOSQueue.c \
 nOS/src/nOSSem.c \
 nOS/src/nOSThread.c \
-nOS/src/nOSTimer.c
+nOS/src/nOSTimer.c \
+Src/cli.c
 
 # ASM sources
 ASM_SOURCES =  \

@@ -58,6 +58,7 @@
 #include "usb_device.h"
 #include "gpio.h"
 #include "nOS.h"
+#include "cli.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -90,8 +91,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  __disable_irq();
   nOS_Init();
-  nOS_Start();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -120,7 +121,10 @@ int main(void)
   MX_SPI1_Init();
   MX_CAN_Init();
   /* USER CODE BEGIN 2 */
-
+  nOS_Start();
+  __enable_irq();
+  
+  CLI_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */

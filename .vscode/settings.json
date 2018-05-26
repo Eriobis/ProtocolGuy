@@ -1,4 +1,9 @@
 {
     "C_Cpp.default.includePath": null,
-    "C_Cpp.default.systemIncludePath": null
+    "C_Cpp.default.systemIncludePath": null,
+    "files.associations": {
+        "gpio.h": "c"
+    },
+    "cortex-debug.armToolchainPath": "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\5.4 2016q3\\bin\\",
+    "cortex-debug.stutilPath": "C:\\stlink-1.3.0-win64\\bin\\st-util.exe"
 }

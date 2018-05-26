@@ -1,0 +1,34 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}\\build\\ProtocolGuy.elf",
+            "name": "Debug Microcontroller",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "v1": true,
+            "showDevDebugOutput":true,
+            "windows": {
+                
+            },
+            "runToMain": true
+        },
+        {
+            "name": "STLink (gdb) Attach",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "${workspaceRoot}\\build\\ProtocolGuy.elf",
+            "gdbpath": "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\5.4 2016q3\\bin\\arm-none-eabi-gdb.exe",
+            "target": "localhost:4242",
+            "cwd": "${workspaceRoot}",
+            "remote": true,
+            "autorun": [
+                "load ${workspaceRoot}\\build\\ProtocolGuy.elf",
+                "monitor reset",
+                "break main"
+            ]
+        },
+    ]
+}

@@ -53,7 +53,7 @@ extern UART_HandleTypeDef huart1;
 /**
 * @brief This function handles System tick timer.
 */
-void SysTick_Handler(void)
+NOS_ISR(SysTick_Handler)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
   nOS_Tick(1);
@@ -75,7 +75,7 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles I2C1 event global interrupt / I2C1 wake-up interrupt through EXTI line 23.
 */
-void I2C1_IRQHandler(void)
+NOS_ISR(I2C1_IRQHandler)
 {
   /* USER CODE BEGIN I2C1_IRQn 0 */
 
@@ -93,7 +93,7 @@ void I2C1_IRQHandler(void)
 /**
 * @brief This function handles SPI1 global interrupt.
 */
-void SPI1_IRQHandler(void)
+NOS_ISR(SPI1_IRQHandler)
 {
   /* USER CODE BEGIN SPI1_IRQn 0 */
 
@@ -107,7 +107,7 @@ void SPI1_IRQHandler(void)
 /**
 * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
 */
-void USART1_IRQHandler(void)
+NOS_ISR(USART1_IRQHandler)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
 
@@ -121,7 +121,7 @@ void USART1_IRQHandler(void)
 /**
 * @brief This function handles USB global interrupt / USB wake-up interrupt through EXTI line 18.
 */
-void USB_IRQHandler(void)
+NOS_ISR(USB_IRQHandler)
 {
   /* USER CODE BEGIN USB_IRQn 0 */
 

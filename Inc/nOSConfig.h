@@ -115,7 +115,7 @@
  *   1. If disabled, application can't specify state of the thread at creation.                                       *
  *                                                                                                                    *
  **********************************************************************************************************************/
-#define NOS_CONFIG_THREAD_SUSPEND_ENABLE            1
+#define NOS_CONFIG_THREAD_SUSPEND_ENABLE            0
 
 /**********************************************************************************************************************
  *                                                                                                                    *
@@ -146,7 +146,7 @@
  * Enable or disable changing priority of thread at run-time.                                                         *
  *                                                                                                                    *
  **********************************************************************************************************************/
-#define NOS_CONFIG_THREAD_SET_PRIO_ENABLE           1
+#define NOS_CONFIG_THREAD_SET_PRIO_ENABLE           0
 
 /**********************************************************************************************************************
  *                                                                                                                    *
@@ -164,7 +164,7 @@
  * Enable or disable joining thread (waiting for other thread to complete).                                           *
  *                                                                                                                    *
  **********************************************************************************************************************/
-#define NOS_CONFIG_THREAD_JOIN_ENABLE               1
+#define NOS_CONFIG_THREAD_JOIN_ENABLE               0
 
 /**********************************************************************************************************************
  *                                                                                                                    *
