@@ -14,7 +14,7 @@
 
 /* Local Defines ----------------------------------------------------------------------------------------------------*/
 
-#define CLI_STACK_SIZE      256  // 256*4
+#define CLI_STACK_SIZE      128 //512bytes
 #define CLI_RXQ_SIZE        255
 #define CLI_MAX_CMD_Q       3
 #define CLI_MAX_CMD_SIZE    256
@@ -35,6 +35,7 @@ typedef enum{
 
 static void CLI_Send    (uint8_t *Buf, uint16_t Len);
 static void Send_Prompt (uint8_t*);
+static void CLI_Task    (void *arg);
 
 /* Local Constants --------------------------------------------------------------------------------------------------*/
 
@@ -50,8 +51,6 @@ uint8_t     CmdBuilderBuff[CLI_MAX_CMD_SIZE];
 uint16_t    CmdBuilderBuffIdx;
 uint8_t     TmpCmdBuff[CLI_MAX_CMD_SIZE];
 cli_mode_e  cliMode;
-
-void CLI_Task(void *arg);
 
 /* Local Functions --------------------------------------------------------------------------------------------------*/
 
@@ -89,6 +88,7 @@ void CLI_Task(void *arg)
                 // Send dummy char to print properly in console, this is because the \e received has
                 // been echoed to the console
                 CLI_Send("Q",1);
+                CLI_Send("\r\n", 2);
                 Send_Prompt(CLI_MENU_GetMenuStr());
             }
             else
@@ -110,7 +110,7 @@ void CLI_Task(void *arg)
         }
 
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
-        nOS_Sleep(20);
+        nOS_Sleep(50);
     }
 }
 
@@ -119,7 +119,7 @@ static void CLI_Send(uint8_t *Buf, uint16_t Len)
 {
     while (USBD_OK != CDC_Transmit_FS(Buf, Len))
     {
-
+        nOS_Sleep(10);
     }
 }
 
@@ -127,7 +127,7 @@ static void Send_Prompt(uint8_t* menuStr)
 {
     uint8_t promptStr[32];
 
-    sprintf(promptStr, "%s>", CLI_MENU_GetMenuStr());
+    sprintf(promptStr, "%s>", menuStr);
     CLI_Send(promptStr, strlen(promptStr));
 }
 
@@ -169,7 +169,7 @@ void CLI_UserConnected()
   *
   *--------------------------------------------------------------------------------------------------------------------
   */
-#define CLI_PRINT_MAX_SIZE  128
+#define CLI_PRINT_MAX_SIZE  32
 uint8_t cliPrintBuff[CLI_PRINT_MAX_SIZE];
 
 size_t CLI_Printf(const char* pFormat, ...)
@@ -181,8 +181,9 @@ size_t CLI_Printf(const char* pFormat, ...)
 
     Buffer = cliPrintBuff;
     va_start(vaArg, (const char*)pFormat);
-    Size = snprintf(&Buffer[0], CLI_PRINT_MAX_SIZE, pFormat, vaArg);
-    CLI_Send(&Buffer[0], Size);
+    Size = sprintf(Buffer, pFormat, vaArg);
+    CLI_Send(Buffer, Size);
+    nOS_Sleep(10);
     CLI_Send("\r\n", 2);
     va_end(vaArg);
     

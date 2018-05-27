@@ -20,11 +20,12 @@ X_CLI_CMD( SPI_CMD_lc,"spi",     NULL         )\
 X_CLI_CMD( SPI_CMD,   "SPI",     NULL         )
 
 #define X_I2C_CMD_ARRAY \
-X_CLI_I2C_CMD( I2C_ADDR_CMD,        "addr",     NULL     )\
-X_CLI_I2C_CMD( I2C_WRITE_CMD,       "w",        NULL     )\
-X_CLI_I2C_CMD( I2C_WRITE_READ_CMD,  "wr",       NULL     )\
-X_CLI_I2C_CMD( I2C_READ_CMD,        "r",        NULL     )\
-X_CLI_I2C_CMD( I2C_SCAN,            "scan",     NULL     )
+X_CLI_I2C_CMD( I2C_ADDR_CMD,        "addr",     NULL            )\
+X_CLI_I2C_CMD( I2C_WRITE_CMD,       "w",        I2C_WriteCmd    )\
+X_CLI_I2C_CMD( I2C_WRITE_READ_CMD,  "wr",       NULL            )\
+X_CLI_I2C_CMD( I2C_READ_CMD,        "r",        NULL            )\
+X_CLI_I2C_CMD( I2C_HELP_CMD,        "h",        ShowI2CHelp     )\
+X_CLI_I2C_CMD( I2C_SCAN,            "scan",     NULL            )
 
 #define X_MENU_COMMAND_ARRAY \
 X_CLI_MENU_CMD( HELP_MENU  "h",     MENU_HELP   )\
@@ -55,8 +56,16 @@ typedef enum
     NUM_OF_CLI_CMD
 }CLI_CmdIndex_e;
 
-/* Forward Declarations ---------------------------------------------------------------------------------------------*/
+typedef enum
+{
+#define X_CLI_I2C_CMD(IDX, CMD, CALLBACK) IDX,
+    X_I2C_CMD_ARRAY
+#undef X_CLI_I2C_CMD
+    NUM_OF_I2C_CLI_CMD
+}CLI_I2CCmdIndex_e;
 
+/* Forward Declarations ---------------------------------------------------------------------------------------------*/
+// Parser Section
 static void ParseMainCmd    (uint8_t *cmd);
 static void ParseConfigCmd  (uint8_t *cmd);
 static void ParseUartCmd    (uint8_t *cmd);
@@ -64,20 +73,35 @@ static void ParseSpiCmd     (uint8_t *cmd);
 static void ParseI2CCmd     (uint8_t *cmd);
 static void ParseCANCmd     (uint8_t *cmd);
 static void GotoMenu        (CLI_MENU_PAGE_e page);
-static void ShowHelp		(void);
+
+//I2C Section
+static void I2C_WriteCmd    (void);
+
+// Help section
+static void ShowHelp        (void);
+static void ShowI2CHelp		(void);
 
 /* Local Constants --------------------------------------------------------------------------------------------------*/
 
 const char* menuStr[] = {"main", "config", "UART", "I2C", "SPI", "CAN", "ECHO"};
 
+// Main Cmd
 #define X_CLI_CMD( IDX, COMMAND, CALLBACK )  COMMAND,
-const char* cmdStr[] = { X_COMMAND_ARRAY };
+const char* mainCmdArray[] = { X_COMMAND_ARRAY };
 #undef X_CLI_CMD
-
+//Main Cmd Callback
 #define X_CLI_CMD( IDX, COMMAND, CALLBACK )  CALLBACK,
-void (*cmdCallback[])(void) = { X_COMMAND_ARRAY };
+void (*mainCmdCallback[])(void) = { X_COMMAND_ARRAY };
 #undef X_CLI_CMD
 
+//I2C Commands
+#define X_CLI_I2C_CMD( IDX, COMMAND, CALLBACK )  COMMAND,
+const char* I2CCmdArray[] = { X_I2C_CMD_ARRAY };
+#undef X_CLI_I2C_CMD
+//I2C Commands Callback
+#define X_CLI_I2C_CMD( IDX, COMMAND, CALLBACK )  CALLBACK,
+void (*I2CCmdCallback[])(void) = { X_I2C_CMD_ARRAY };
+#undef X_CLI_I2C_CMD
 
 /* Local Variables --------------------------------------------------------------------------------------------------*/
 
@@ -131,12 +155,11 @@ static void ParseMainCmd(uint8_t *cmd)
     }
     else
     {
-        for(int i=0; i< NUM_OF_CLI_CMD; i++)
+        for(CLI_CmdIndex_e i=0; i< NUM_OF_CLI_CMD; i++)
         {
-            if (!strcmp(cmd, cmdStr[i]))
+            if (!strcmp(cmd, mainCmdArray[i]))
             {
-                CLI_Printf("Command OK");
-                cmdCallback[i]();
+                mainCmdCallback[i]();
             }
         }
     }
@@ -199,7 +222,18 @@ static void ParseSpiCmd(uint8_t *cmd)
   */
 static void ParseI2CCmd(uint8_t *cmd)
 {
+    for(CLI_I2CCmdIndex_e i=0; i< NUM_OF_I2C_CLI_CMD; i++)
+    {
+        if (!strcmp(cmd, I2CCmdArray[i]))
+        {
+            I2CCmdCallback[i]();
+        }
+    }
+}
 
+static void I2C_WriteCmd()
+{
+    CLI_Printf("I2C Write ...");
 }
 
 /**
@@ -229,21 +263,28 @@ static void GotoMenu(CLI_MENU_PAGE_e page)
 
 static void ShowHelp(void)
 {
+    char commandStr[16];
+
     CLI_Printf("----- HELP -----\r\n");
-    CLI_Printf("Known commands : \r\n");
+    CLI_Printf("Known commands :");
     for(int i=0; i< NUM_OF_CLI_CMD; i++)
     {
-        CLI_Printf(" - %s",cmdStr[i]);
-
+        sprintf(commandStr, "%s : ", mainCmdArray[i]);
+        CLI_Printf(commandStr);
     }
+    ShowI2CHelp();
     CLI_Printf("----------------\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
-    CLI_Printf("Help !!!!\r\n");
+}
+
+static void ShowI2CHelp()
+{
+    char commandStr[16];
+    CLI_Printf("\r\n-- I2C Section --");
+    for(int i=0; i< NUM_OF_I2C_CLI_CMD; i++)
+    {
+        sprintf(commandStr, "%s : ", I2CCmdArray[i]);
+        CLI_Printf(commandStr);
+    }
 }
 
 /* Global Functions -------------------------------------------------------------------------------------------------*/
