@@ -51,6 +51,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
+#include "cli.h"
 
 /* USER CODE END INCLUDE */
 
@@ -255,7 +256,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
     case CDC_GET_LINE_CODING:
-
+    	CLI_UserConnected();
     break;
 
     case CDC_SET_CONTROL_LINE_STATE:
@@ -293,6 +294,9 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  //Echo
+  //CDC_Transmit_FS(Buf, (uint16_t)*Len);
+  CLI_Rx(Buf, (uint16_t)*Len);
   return (USBD_OK);
   /* USER CODE END 6 */
 }

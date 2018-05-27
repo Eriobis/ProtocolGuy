@@ -116,7 +116,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
-  MX_FATFS_Init();
+  //MX_FATFS_Init();
   MX_USB_DEVICE_Init();
   MX_CRC_Init();
   MX_SPI1_Init();
@@ -136,10 +136,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    HAL_GPIO_WritePin(GPIOC, LD3_Pin, GPIO_PIN_SET);
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOC, LD3_Pin, GPIO_PIN_RESET);
-    HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 

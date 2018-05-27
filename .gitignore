@@ -35,3 +35,15 @@
 
 *.lst
 /Debug/
+
+ProtocolGuy\.elf\.launch
+
+mx\.scratch
+
+*.bak
+
+\.settings/org\.eclipse\.cdt\.managedbuilder\.core\.prefs
+
+\.settings/com\.atollic\.truestudio\.debug\.hardware_device\.prefs
+
+\.code_review_properties

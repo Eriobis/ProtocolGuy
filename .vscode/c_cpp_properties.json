@@ -22,7 +22,8 @@
                 "path": [
                     "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\5.4 2016q3\\arm-none-eabi\\include",
                     "./nOS/inc",
-                    "./inc"
+                    "./inc",
+                    "./Drivers"
                 ]
             }
         }
