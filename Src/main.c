@@ -114,7 +114,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_USART1_UART_Init();
   //MX_FATFS_Init();
   MX_USB_DEVICE_Init();
@@ -126,6 +125,7 @@ int main(void)
   __enable_irq();
   
   CLI_Init();
+  I2C_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */

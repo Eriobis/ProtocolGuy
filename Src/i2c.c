@@ -49,12 +49,28 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "i2c.h"
-
 #include "gpio.h"
+#include "nOS.h"
 
-/* USER CODE BEGIN 0 */
+/* Local Defines ----------------------------------------------------------------------------------------------------*/
 
-/* USER CODE END 0 */
+#define I2C_STACK_SIZE      64 //512bytes
+#define I2C_RXQ_SIZE        64
+#define I2C_CMDQ_SIZE       64
+#define I2C_MAX_NUM_CMD     5
+
+/* Forward Declarations ---------------------------------------------------------------------------------------------*/
+
+void I2C_Task(void *arg);
+
+/* Local Variables --------------------------------------------------------------------------------------------------*/
+
+nOS_Thread  I2C_Thread;
+nOS_Stack   I2C_Stack[I2C_STACK_SIZE];
+nOS_Queue   I2C_RxQ;
+nOS_Queue   I2C_CmdQ;
+uint8_t     I2C_CmdBuff[I2C_MAX_NUM_CMD][I2C_CMDQ_SIZE];
+uint8_t     RxQ_Buff[I2C_RXQ_SIZE];
 
 I2C_HandleTypeDef hi2c1;
 
@@ -151,6 +167,24 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+void I2C_Init()
+{
+    nOS_QueueCreate(&I2C_CmdQ, I2C_CmdBuff, I2C_RXQ_SIZE, I2C_MAX_NUM_CMD);
+    nOS_QueueCreate(&I2C_RxQ, RxQ_Buff, 1, I2C_RXQ_SIZE);
+    nOS_ThreadCreate(&I2C_Thread, I2C_Task, NULL, I2C_Stack, I2C_STACK_SIZE, 1, "I2C Task");
+}
+
+void I2C_Task(void *arg)
+{
+    MX_I2C1_Init();
+
+    while(1)
+    {
+
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+        nOS_Sleep(50);
+    }
+}
 
 /* USER CODE END 1 */
 
