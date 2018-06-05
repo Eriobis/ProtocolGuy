@@ -787,7 +787,7 @@ uint8_t  *USBD_CDC_GetDeviceQualifierDescriptor (uint16_t *length)
   * @param  fops: CD  Interface callback
   * @retval status
   */
-uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev, 
+USBD_StatusTypeDef  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev, 
                                       USBD_CDC_ItfTypeDef *fops)
 {
   uint8_t  ret = USBD_FAIL;
@@ -807,7 +807,7 @@ uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev,
   * @param  pbuff: Tx Buffer
   * @retval status
   */
-uint8_t  USBD_CDC_SetTxBuffer  (USBD_HandleTypeDef   *pdev,
+USBD_StatusTypeDef  USBD_CDC_SetTxBuffer  (USBD_HandleTypeDef   *pdev,
                                 uint8_t  *pbuff,
                                 uint16_t length)
 {
@@ -826,7 +826,7 @@ uint8_t  USBD_CDC_SetTxBuffer  (USBD_HandleTypeDef   *pdev,
   * @param  pbuff: Rx Buffer
   * @retval status
   */
-uint8_t  USBD_CDC_SetRxBuffer  (USBD_HandleTypeDef   *pdev,
+USBD_StatusTypeDef  USBD_CDC_SetRxBuffer  (USBD_HandleTypeDef   *pdev,
                                    uint8_t  *pbuff)
 {
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
@@ -843,7 +843,7 @@ uint8_t  USBD_CDC_SetRxBuffer  (USBD_HandleTypeDef   *pdev,
   * @param  epnum: endpoint number
   * @retval status
   */
-uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
 {      
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   
@@ -855,12 +855,10 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
       hcdc->TxState = 1;
       
       /* Transmit next packet */
-      USBD_LL_Transmit(pdev,
+      return USBD_LL_Transmit(pdev,
                        CDC_IN_EP,
                        hcdc->TxBuffer,
                        hcdc->TxLength);
-      
-      return USBD_OK;
     }
     else
     {
@@ -880,7 +878,7 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
   * @param  pdev: device instance
   * @retval status
   */
-uint8_t  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
 {      
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   
@@ -890,7 +888,7 @@ uint8_t  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
     if(pdev->dev_speed == USBD_SPEED_HIGH  ) 
     {      
       /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev,
+      return USBD_LL_PrepareReceive(pdev,
                              CDC_OUT_EP,
                              hcdc->RxBuffer,
                              CDC_DATA_HS_OUT_PACKET_SIZE);
@@ -898,12 +896,11 @@ uint8_t  USBD_CDC_ReceivePacket(USBD_HandleTypeDef *pdev)
     else
     {
       /* Prepare Out endpoint to receive next packet */
-      USBD_LL_PrepareReceive(pdev,
+      return USBD_LL_PrepareReceive(pdev,
                              CDC_OUT_EP,
                              hcdc->RxBuffer,
                              CDC_DATA_FS_OUT_PACKET_SIZE);
     }
-    return USBD_OK;
   }
   else
   {

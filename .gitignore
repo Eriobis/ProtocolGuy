@@ -47,3 +47,13 @@ mx\.scratch
 \.settings/com\.atollic\.truestudio\.debug\.hardware_device\.prefs
 
 \.code_review_properties
+
+*.ftl
+
+build/ProtocolGuy\.bin
+
+build/ProtocolGuy\.map
+
+*.tmp
+
+*.ftl_save
