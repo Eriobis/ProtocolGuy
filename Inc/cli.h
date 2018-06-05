@@ -24,7 +24,8 @@
 /* Global Functions Prototypes --------------------------------------------------------------------------------------*/
 
 void    CLI_Init            (void);
-void    CLI_Rx              (uint8_t *Buf, uint16_t Len);
+void    CLI_Send            (char *Buf, uint16_t Len);
+void    CLI_Rx              (char *Buf, uint16_t Len);
 void    CLI_UserConnected   ();
 size_t  CLI_Printf          (const char* pFormat, ...);
 

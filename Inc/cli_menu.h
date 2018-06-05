@@ -23,8 +23,9 @@
 /* Global Functions Prototypes --------------------------------------------------------------------------------------*/
 
 void        CLI_MENU_CmdParse       (uint8_t*);
-uint8_t*    CLI_MENU_GetMenuStr     (void);
+char       *CLI_MENU_GetMenuStr     (void);
 void        CLI_MENU_GoBack         (void);
+uint8_t     parseDataStr            (char *str);
 
 /* ------------------------------------------------------------------------------------------------------------------*/
 

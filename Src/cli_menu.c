@@ -3,11 +3,16 @@
  * @author  Brioconcept Consulting, Inc.
  * @date    20-09-2017
  * @brief   
- **********************************************************************************************************************
+ *********************************************************************************************************************/
 
 /* Includes ---------------------------------------------------------------------------------------------------------*/
 
+#include <string.h>
+#include <stdarg.h>
 #include "cli_menu.h"
+#include "i2c.h"
+#include "cli.h"
+#include "strfct.h"
 
 /* Local Defines ----------------------------------------------------------------------------------------------------*/
 //          Command     Callback
@@ -20,12 +25,12 @@ X_CLI_CMD( SPI_CMD_lc,"spi",     NULL         )\
 X_CLI_CMD( SPI_CMD,   "SPI",     NULL         )
 
 #define X_I2C_CMD_ARRAY \
-X_CLI_I2C_CMD( I2C_ADDR_CMD,        "addr",     NULL            )\
-X_CLI_I2C_CMD( I2C_WRITE_CMD,       "w",        I2C_WriteCmd    )\
-X_CLI_I2C_CMD( I2C_WRITE_READ_CMD,  "wr",       NULL            )\
-X_CLI_I2C_CMD( I2C_READ_CMD,        "r",        NULL            )\
-X_CLI_I2C_CMD( I2C_HELP_CMD,        "h",        ShowI2CHelp     )\
-X_CLI_I2C_CMD( I2C_SCAN,            "scan",     NULL            )
+X_CLI_I2C_CMD( I2C_ADDR_CMD,        "addr",     CLI_I2C_SetAddr         )\
+X_CLI_I2C_CMD( I2C_WRITE_CMD,       "w",        CLI_I2C_WriteCmd        )\
+X_CLI_I2C_CMD( I2C_WRITE_READ_CMD,  "wr",       CLI_I2C_WriteReadCmd    )\
+X_CLI_I2C_CMD( I2C_READ_CMD,        "r",        NULL                    )\
+X_CLI_I2C_CMD( I2C_HELP_CMD,        "h",        ShowI2CHelp             )\
+X_CLI_I2C_CMD( I2C_SCAN,            "scan",     NULL                    )
 
 #define X_MENU_COMMAND_ARRAY \
 X_CLI_MENU_CMD( HELP_MENU  "h",     MENU_HELP   )\
@@ -75,15 +80,19 @@ static void ParseCANCmd     (uint8_t *cmd);
 static void GotoMenu        (CLI_MENU_PAGE_e page);
 
 //I2C Section
-static void I2C_WriteCmd    (void);
+static void CLI_I2C_WriteCmd        (uint8_t *arg);
+static void CLI_I2C_WriteReadCmd    (uint8_t *arg);
+static void CLI_I2C_SetAddr         (uint8_t *arg);
 
 // Help section
 static void ShowHelp        (void);
-static void ShowI2CHelp		(void);
+static void ShowI2CHelp		(uint8_t *arg);
 
 /* Local Constants --------------------------------------------------------------------------------------------------*/
 
-const char* menuStr[] = {"main", "config", "UART", "I2C", "SPI", "CAN", "ECHO"};
+volatile char i2cAddrStr[7] = "I2C@00";
+char* menuStr[] = {"main", "config", "UART", i2cAddrStr, "SPI", "CAN", "ECHO"};
+
 
 // Main Cmd
 #define X_CLI_CMD( IDX, COMMAND, CALLBACK )  COMMAND,
@@ -100,13 +109,15 @@ const char* I2CCmdArray[] = { X_I2C_CMD_ARRAY };
 #undef X_CLI_I2C_CMD
 //I2C Commands Callback
 #define X_CLI_I2C_CMD( IDX, COMMAND, CALLBACK )  CALLBACK,
-void (*I2CCmdCallback[])(void) = { X_I2C_CMD_ARRAY };
+void (*I2CCmdCallback[])(uint8_t *arg) = { X_I2C_CMD_ARRAY };
 #undef X_CLI_I2C_CMD
 
 /* Local Variables --------------------------------------------------------------------------------------------------*/
 
 CLI_MENU_PAGE_e ActualPage = MENU_MAIN;
 CLI_MENU_PAGE_e PreviousPage = MENU_MAIN;
+uint8_t dataCommand[64];
+uint8_t dataCommandIdx;
 
 /* Local Functions --------------------------------------------------------------------------------------------------*/
 
@@ -124,7 +135,7 @@ static void ParseMainCmd(uint8_t *cmd)
 {
     uint8_t command;
     // One char command
-    if(strlen(cmd) == 1)
+    if(strlen((char*)cmd) == 1)
     {
         command = cmd[0];
 
@@ -157,7 +168,7 @@ static void ParseMainCmd(uint8_t *cmd)
     {
         for(CLI_CmdIndex_e i=0; i< NUM_OF_CLI_CMD; i++)
         {
-            if (!strcmp(cmd, mainCmdArray[i]))
+            if (!strcmp((char*)cmd, mainCmdArray[i]))
             {
                 mainCmdCallback[i]();
             }
@@ -222,18 +233,77 @@ static void ParseSpiCmd(uint8_t *cmd)
   */
 static void ParseI2CCmd(uint8_t *cmd)
 {
+    char *argPtr = NULL;
+    char *CmdPtr = NULL;
+    CmdPtr = strtok((char*)cmd, "=");
     for(CLI_I2CCmdIndex_e i=0; i< NUM_OF_I2C_CLI_CMD; i++)
     {
-        if (!strcmp(cmd, I2CCmdArray[i]))
+        if (!strcmp(CmdPtr, I2CCmdArray[i]))
         {
-            I2CCmdCallback[i]();
+            // Find the argument pointer
+            argPtr = strtok(NULL, ";");
+            if(argPtr != NULL)
+            {
+                I2CCmdCallback[i](argPtr);
+            }
         }
     }
 }
 
-static void I2C_WriteCmd()
+/**
+  *--------------------------------------------------------------------------------------------------------------------
+  * @brief  
+  *
+  * @param  none
+  *
+  * @retval none
+  *
+  *--------------------------------------------------------------------------------------------------------------------
+  */
+static void CLI_I2C_WriteCmd(uint8_t *arg)
 {
-    CLI_Printf("I2C Write ...");
+    uint8_t dataLen;
+    CLI_Printf("I2C W Cmd ...\r\n");
+    dataLen = parseDataStr(arg);
+    I2C_Cmd_Write(dataCommand, dataLen);
+}
+
+/**
+  *--------------------------------------------------------------------------------------------------------------------
+  * @brief  
+  *
+  * @param  none
+  *
+  * @retval none
+  *
+  *--------------------------------------------------------------------------------------------------------------------
+  */
+static void CLI_I2C_WriteReadCmd(uint8_t *arg)
+{
+    uint8_t dataLen;
+    CLI_Printf("I2C WR Cmd ...\r\n");
+    dataLen = parseDataStr(arg);
+    I2C_Cmd_Write_Read(dataCommand, dataLen);
+}
+
+/**
+  *--------------------------------------------------------------------------------------------------------------------
+  * @brief  
+  *
+  * @param  none
+  *
+  * @retval none
+  *
+  *--------------------------------------------------------------------------------------------------------------------
+  */
+static void CLI_I2C_SetAddr(uint8_t *arg)
+{
+    uint8_t dataLen;
+    char addrStr[6];
+    CLI_Printf("I2C Addr Cmd ...\r\n");
+    dataLen = parseDataStr(arg);
+    I2C_SetAddress(dataCommand[0]);
+    snprintf(menuStr[3], 7, "I2C@%02X", dataCommand[0]);
 }
 
 /**
@@ -272,11 +342,11 @@ static void ShowHelp(void)
         sprintf(commandStr, "%s : ", mainCmdArray[i]);
         CLI_Printf(commandStr);
     }
-    ShowI2CHelp();
+    ShowI2CHelp(NULL);
     CLI_Printf("----------------\r\n");
 }
 
-static void ShowI2CHelp()
+static void ShowI2CHelp(uint8_t *arg)
 {
     char commandStr[16];
     CLI_Printf("\r\n-- I2C Section --");
@@ -331,7 +401,7 @@ void CLI_MENU_CmdParse(uint8_t *cmd)
 
 }
 
-uint8_t* CLI_MENU_GetMenuStr (void)
+char* CLI_MENU_GetMenuStr (void)
 {
     return menuStr[ActualPage];
 }
@@ -339,4 +409,42 @@ uint8_t* CLI_MENU_GetMenuStr (void)
 void CLI_MENU_GoBack(void)
 {
     GotoMenu(PreviousPage);
+}
+
+typedef enum __Data_Type_e
+{
+    DATA_0X,
+    DATA_HEX,
+}Data_Type_e;
+
+uint8_t parseDataStr(char *str)
+{
+    uint8_t len;
+    char *strPtr;
+    strPtr = str;
+    
+    dataCommandIdx = 0;
+    len = 0;
+    while(strPtr < (str+strlen(str)))
+    {
+        if((*strPtr == ' ') || (*strPtr == ';'))
+        {
+            strPtr++;
+            len++;
+        }
+        if((*strPtr == '0' && *(strPtr+1) == 'x') || (*strPtr == '0' && *(strPtr+1) == 'X'))
+        {
+            strPtr += 2;
+        }
+        dataCommand[dataCommandIdx] = STR_atoh8(*strPtr, *(strPtr+1));
+        dataCommandIdx++;
+        len++;
+        strPtr += 2;
+    }
+    for(int i=0; i< dataCommandIdx; i++)
+    {
+        CLI_Printf("%02x", dataCommand[i]);
+    }
+    CLI_Printf("\r\n");
+    return len;
 }

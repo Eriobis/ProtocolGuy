@@ -51,13 +51,13 @@
 #include "i2c.h"
 #include "gpio.h"
 #include "nOS.h"
+#include "cli.h"
 
 /* Local Defines ----------------------------------------------------------------------------------------------------*/
 
 #define I2C_STACK_SIZE      64 //512bytes
-#define I2C_RXQ_SIZE        64
-#define I2C_CMDQ_SIZE       64
-#define I2C_MAX_NUM_CMD     5
+#define I2C_RXQ_SIZE        32
+#define I2C_MAX_NUM_CMD     10
 
 /* Forward Declarations ---------------------------------------------------------------------------------------------*/
 
@@ -68,9 +68,10 @@ void I2C_Task(void *arg);
 nOS_Thread  I2C_Thread;
 nOS_Stack   I2C_Stack[I2C_STACK_SIZE];
 nOS_Queue   I2C_RxQ;
-nOS_Queue   I2C_CmdQ;
-uint8_t     I2C_CmdBuff[I2C_MAX_NUM_CMD][I2C_CMDQ_SIZE];
-uint8_t     RxQ_Buff[I2C_RXQ_SIZE];
+uint8_t     RxQ_Buff[I2C_MAX_NUM_CMD][I2C_RXQ_SIZE];
+uint8_t     CurrentCmd[I2C_RXQ_SIZE];
+uint8_t     CurrentAddr;
+uint8_t     Rx_Buff[I2C_RXQ_SIZE];
 
 I2C_HandleTypeDef hi2c1;
 
@@ -169,9 +170,9 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 /* USER CODE BEGIN 1 */
 void I2C_Init()
 {
-    nOS_QueueCreate(&I2C_CmdQ, I2C_CmdBuff, I2C_RXQ_SIZE, I2C_MAX_NUM_CMD);
-    nOS_QueueCreate(&I2C_RxQ, RxQ_Buff, 1, I2C_RXQ_SIZE);
+    nOS_QueueCreate(&I2C_RxQ, RxQ_Buff, I2C_RXQ_SIZE, I2C_MAX_NUM_CMD);
     nOS_ThreadCreate(&I2C_Thread, I2C_Task, NULL, I2C_Stack, I2C_STACK_SIZE, 1, "I2C Task");
+    CurrentAddr = 0x3A;
 }
 
 void I2C_Task(void *arg)
@@ -180,10 +181,78 @@ void I2C_Task(void *arg)
 
     while(1)
     {
-
+        if(!nOS_QueueIsEmpty(&I2C_RxQ))
+        {
+            nOS_QueueRead(&I2C_RxQ, CurrentCmd, NOS_NO_WAIT);
+            CLI_Printf("\r\n");
+            for(int i=0; i<CurrentCmd[0]; i++)
+            {
+            	CLI_Printf("%02X", CurrentCmd[i+1]);
+            }
+            CLI_Printf("\r\n");
+        }
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
         nOS_Sleep(50);
     }
+}
+
+bool I2C_Cmd_Read(uint8_t* cmd)
+{
+    memset(Rx_Buff,0,I2C_RXQ_SIZE);
+	HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[0]);
+	Rx_Buff[0] = cmd[0];
+}
+
+bool I2C_Cmd_Write(uint8_t* cmd, uint8_t size)
+{
+    HAL_I2C_Master_Transmit_IT(&hi2c1, CurrentAddr, cmd, size);
+    return 0;
+}
+
+bool I2C_Cmd_Write_Read(uint8_t* cmd) // Reg, ReadLength
+{
+    HAL_I2C_Master_Transmit(&hi2c1, CurrentAddr, cmd, 1, 5);
+    memset(Rx_Buff,0,I2C_RXQ_SIZE);
+	HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[1]);
+	Rx_Buff[0] = cmd[1];
+    return 0;
+}
+
+bool I2C_SetAddress(uint8_t addr)
+{
+    CurrentAddr = addr;
+    return 0;
+}
+
+void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    CLI_Printf("I2C Abort !\n");
+}
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	CLI_Printf("I2C Sent !\n");
+}
+
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	CLI_Printf("I2C Rx ...\n");
+    nOS_QueueWrite(&I2C_RxQ, Rx_Buff, NOS_NO_WAIT);
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+	uint32_t error;
+	error = HAL_I2C_GetError(hi2c);
+	if (error == HAL_I2C_ERROR_TIMEOUT)
+	{
+		CLI_Printf("I2C Error - Timeout\n");
+	}
+	else if(error == HAL_I2C_ERROR_AF)
+	{
+		CLI_Printf("I2C Error - ACK error ( Device not present? )\n");
+	}
+
 }
 
 /* USER CODE END 1 */
