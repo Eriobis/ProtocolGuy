@@ -62,21 +62,16 @@
 
 /* USER CODE END Includes */
 
-extern I2C_HandleTypeDef hi2c1;
-
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
 
-void MX_I2C1_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-bool I2C_Cmd_Write	(uint8_t* cmd, uint8_t size);
-void I2C_Init		(void);
-
-/* USER CODE END Prototypes */
+void MX_I2C1_Init       (void);
+bool I2C_Cmd_Write	    (uint8_t* cmd, uint8_t size);
+void I2C_Init		        (void);
+bool I2C_ScanForDevices ();
 
 #ifdef __cplusplus
 }

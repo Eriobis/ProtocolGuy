@@ -56,12 +56,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
 #include "main.h"
+#include <stdbool.h>
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-
-extern SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN Private defines */
 
@@ -69,11 +68,9 @@ extern SPI_HandleTypeDef hspi1;
 
 extern void _Error_Handler(char *, int);
 
-void MX_SPI1_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-
-/* USER CODE END Prototypes */
+void MX_SPI1_Init       (void);
+void SPI_Init           (void);
+bool SPI_dataWrite      (uint8_t *ptr, uint16_t len);
 
 #ifdef __cplusplus
 }

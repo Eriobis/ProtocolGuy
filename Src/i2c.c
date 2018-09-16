@@ -52,12 +52,9 @@
 #include "gpio.h"
 #include "nOS.h"
 #include "cli.h"
+#include "defines.h"
 
 /* Local Defines ----------------------------------------------------------------------------------------------------*/
-
-#define I2C_STACK_SIZE      64 //512bytes
-#define I2C_RXQ_SIZE        32
-#define I2C_MAX_NUM_CMD     10
 
 /* Forward Declarations ---------------------------------------------------------------------------------------------*/
 
@@ -69,11 +66,16 @@ nOS_Thread  I2C_Thread;
 nOS_Stack   I2C_Stack[I2C_STACK_SIZE];
 nOS_Queue   I2C_RxQ;
 uint8_t     RxQ_Buff[I2C_MAX_NUM_CMD][I2C_RXQ_SIZE];
-uint8_t     CurrentCmd[I2C_RXQ_SIZE];
 uint8_t     CurrentAddr;
+uint8_t     CurrentCmd[I2C_RXQ_SIZE];
 uint8_t     Rx_Buff[I2C_RXQ_SIZE];
 
 I2C_HandleTypeDef hi2c1;
+
+/* Local Functions --------------------------------------------------------------------------------------------------*/
+
+
+/* Global Functions -------------------------------------------------------------------------------------------------*/
 
 /* I2C1 init function */
 void MX_I2C1_Init(void)
@@ -170,15 +172,17 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 /* USER CODE BEGIN 1 */
 void I2C_Init()
 {
+    MX_I2C1_Init();
     nOS_QueueCreate(&I2C_RxQ, RxQ_Buff, I2C_RXQ_SIZE, I2C_MAX_NUM_CMD);
     nOS_ThreadCreate(&I2C_Thread, I2C_Task, NULL, I2C_Stack, I2C_STACK_SIZE, 1, "I2C Task");
-    CurrentAddr = 0x3A;
+    CurrentAddr = 0x00;
+    CLI_Printf("[I2C] Starting...\r\n");
 }
 
 void I2C_Task(void *arg)
 {
-    MX_I2C1_Init();
-
+    memset(Rx_Buff,0,I2C_RXQ_SIZE);
+    CLI_Printf("[I2C] Task Started.\r\n");
     while(1)
     {
         if(!nOS_QueueIsEmpty(&I2C_RxQ))
@@ -187,7 +191,7 @@ void I2C_Task(void *arg)
             CLI_Printf("\r\n");
             for(int i=0; i<CurrentCmd[0]; i++)
             {
-            	CLI_Printf("%02X", CurrentCmd[i+1]);
+              CLI_Printf("%02X", CurrentCmd[i+1]);
             }
             CLI_Printf("\r\n");
         }
@@ -199,8 +203,8 @@ void I2C_Task(void *arg)
 bool I2C_Cmd_Read(uint8_t* cmd)
 {
     memset(Rx_Buff,0,I2C_RXQ_SIZE);
-	HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[0]);
-	Rx_Buff[0] = cmd[0];
+    HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[0]);
+    Rx_Buff[0] = cmd[0];
 }
 
 bool I2C_Cmd_Write(uint8_t* cmd, uint8_t size)
@@ -212,15 +216,27 @@ bool I2C_Cmd_Write(uint8_t* cmd, uint8_t size)
 bool I2C_Cmd_Write_Read(uint8_t* cmd) // Reg, ReadLength
 {
     HAL_I2C_Master_Transmit(&hi2c1, CurrentAddr, cmd, 1, 5);
-    memset(Rx_Buff,0,I2C_RXQ_SIZE);
-	HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[1]);
-	Rx_Buff[0] = cmd[1];
+    HAL_I2C_Master_Receive_IT(&hi2c1, CurrentAddr, &Rx_Buff[1], cmd[1]);
+    Rx_Buff[0] = cmd[1];
     return 0;
 }
 
 bool I2C_SetAddress(uint8_t addr)
 {
     CurrentAddr = addr;
+    return 0;
+}
+
+bool I2C_ScanForDevices()
+{
+    CLI_Printf("Scanning the I2C bus ...");
+    for(uint8_t i=0; i<=0xFE; i+=2)
+    {
+      if (HAL_I2C_Master_Transmit(&hi2c1, i, NULL, 0, 5) == HAL_OK)
+      {
+        CLI_Printf("0x%02X, ", i);
+      }
+    }
     return 0;
 }
 
@@ -231,27 +247,28 @@ void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c)
 
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	CLI_Printf("I2C Sent !\n");
+    CLI_Printf("I2C Sent !\n");
 }
 
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	CLI_Printf("I2C Rx ...\n");
+    CLI_Printf("I2C Rx ...\n");
     nOS_QueueWrite(&I2C_RxQ, Rx_Buff, NOS_NO_WAIT);
+    memset(Rx_Buff,0,I2C_RXQ_SIZE);
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
-	uint32_t error;
-	error = HAL_I2C_GetError(hi2c);
-	if (error == HAL_I2C_ERROR_TIMEOUT)
-	{
-		CLI_Printf("I2C Error - Timeout\n");
-	}
-	else if(error == HAL_I2C_ERROR_AF)
-	{
-		CLI_Printf("I2C Error - ACK error ( Device not present? )\n");
-	}
+  uint32_t error;
+  error = HAL_I2C_GetError(hi2c);
+  if (error == HAL_I2C_ERROR_TIMEOUT)
+  {
+    CLI_Printf("I2C Error - Timeout\n");
+  }
+  else if(error == HAL_I2C_ERROR_AF)
+  {
+    CLI_Printf("I2C Error - ACK error ( Device not present? )\n");
+  }
 
 }
 

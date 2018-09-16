@@ -57,3 +57,5 @@ build/ProtocolGuy\.map
 *.tmp
 
 *.ftl_save
+
+\.settings/language\.settings\.xml

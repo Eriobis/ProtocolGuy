@@ -92,6 +92,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
   __disable_irq();
   nOS_Init();
   /* USER CODE END 1 */
@@ -118,7 +119,6 @@ int main(void)
   //MX_FATFS_Init();
   MX_USB_DEVICE_Init();
   MX_CRC_Init();
-  MX_SPI1_Init();
   MX_CAN_Init();
   /* USER CODE BEGIN 2 */
   nOS_Start();
@@ -126,6 +126,8 @@ int main(void)
   
   CLI_Init();
   I2C_Init();
+  SPI_Init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

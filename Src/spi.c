@@ -49,14 +49,53 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "spi.h"
-
 #include "gpio.h"
+#include "defines.h"
+#include "nOS.h"
 
 /* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
+/* Forward Declarations ---------------------------------------------------------------------------------------------*/
+
+static void SPI_Task(void *arg);
+
+/* Local Variables --------------------------------------------------------------------------------------------------*/
 
 SPI_HandleTypeDef hspi1;
+nOS_Thread SPI_Thread;
+nOS_Stack SPI_Stack[SPI_STACK_SIZE];
+nOS_Queue SPI_RxQ;
+uint8_t RxQ_Buff[SPI_MAX_NUM_CMD][SPI_RXQ_SIZE];
+uint8_t CurrentCmn[SPI_RXQ_SIZE];
+uint8_t Rx_Buff[SPI_RXQ_SIZE];
+uint8_t CurrentCmd[SPI_RXQ_SIZE];
+
+/* Local Functions --------------------------------------------------------------------------------------------------*/
+
+static void SPI_Task(void *arg)
+{
+    char testStr[] = "test";
+    memset(Rx_Buff, 0, SPI_RXQ_SIZE);
+    CLI_Printf("[SPI] Task Started.\r\n");
+    while(1)
+    {
+        if(!nOS_QueueIsEmpty(&SPI_RxQ))
+        {
+            nOS_QueueRead(&SPI_RxQ, CurrentCmd, NOS_NO_WAIT);
+            CLI_Printf("\r\n");
+            for(int i=0; i<CurrentCmd[0]; i++)
+            {
+                CLI_Printf("%02X ", CurrentCmd[i+1]);
+            }
+            CLI_Printf("\r\n");
+        }
+        HAL_SPI_Transmit_IT(&hspi1, testStr, 4);
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+        nOS_Sleep(50);
+    }
+}
+
+/* Global Functions -------------------------------------------------------------------------------------------------*/
 
 /* SPI1 init function */
 void MX_SPI1_Init(void)
@@ -69,7 +108,7 @@ void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -140,9 +179,25 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 
   /* USER CODE END SPI1_MspDeInit 1 */
   }
-} 
+}
 
 /* USER CODE BEGIN 1 */
+
+// SPI App init
+void SPI_Init()
+{
+    MX_SPI1_Init();
+    nOS_QueueCreate(&SPI_RxQ, RxQ_Buff, SPI_RXQ_SIZE, SPI_MAX_NUM_CMD);
+    nOS_ThreadCreate(&SPI_Thread, SPI_Task, NULL, SPI_Stack, SPI_STACK_SIZE, 1, "SPI Task");
+    CLI_Printf("[SPI] Starting...\r\n");
+}
+
+bool SPI_dataWrite(uint8_t *ptr, uint16_t len)
+{
+	static char sendBuff[256];
+	memcpy(sendBuff, ptr, len);
+    HAL_SPI_Transmit_IT(&hspi1, sendBuff, len);
+}
 
 /* USER CODE END 1 */
 
